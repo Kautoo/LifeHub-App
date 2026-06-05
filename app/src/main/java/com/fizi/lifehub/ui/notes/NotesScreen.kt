@@ -1,7 +1,6 @@
 package com.fizi.lifehub.ui.notes
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,31 +19,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fizi.lifehub.data.local.entity.NoteEntity
+import com.fizi.lifehub.ui.components.*
+import com.fizi.lifehub.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-private val noteColors = listOf(
-    Color(0xFFFFF9C4), // Yellow
-    Color(0xFFC8E6C9), // Green
-    Color(0xFFBBDEFB), // Blue
-    Color(0xFFFFCDD2), // Pink
-    Color(0xFFD1C4E9), // Purple
-    Color(0xFFFFE0B2), // Orange
-    Color(0xFFB2DFDB), // Teal
-    Color(0xFFF5F5F5)  // Grey
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotesScreen(
-    viewModel: NotesViewModel = hiltViewModel()
-) {
+fun NotesScreen(viewModel: NotesViewModel = hiltViewModel()) {
     val notes by viewModel.filteredNotes.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
@@ -53,144 +44,137 @@ fun NotesScreen(
     var newContent by remember { mutableStateOf("") }
     var selectedColor by remember { mutableIntStateOf(0) }
 
-    Scaffold(
-        topBar = {
-            Column {
-                LargeTopAppBar(
-                    title = {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Secondary.copy(alpha = 0.06f), Color.Transparent)
+                            )
+                        )
+                        .statusBarsPadding()
+                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
                             "Notes",
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.displayLarge,
+                            fontWeight = FontWeight.ExtraBold
                         )
-                    },
-                    actions = {
                         IconButton(onClick = { showSearch = !showSearch }) {
-                            Icon(Icons.Default.Search, contentDescription = "Search")
+                            Icon(Icons.Default.Search, "Search")
                         }
                     }
-                )
+                    if (notes.isNotEmpty()) {
+                        Text(
+                            "${notes.size} notes",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
-                // Search bar
-                AnimatedVisibility(visible = showSearch) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { viewModel.updateSearch(it) },
-                        placeholder = { Text("Search notes...") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.updateSearch("") }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Clear")
+                    AnimatedVisibility(visible = showSearch) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { viewModel.updateSearch(it) },
+                            placeholder = { Text("Search notes...") },
+                            leadingIcon = { Icon(Icons.Default.Search, null) },
+                            trailingIcon = {
+                                if (searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { viewModel.updateSearch("") }) {
+                                        Icon(Icons.Default.Close, "Clear")
+                                    }
                                 }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        singleLine = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            singleLine = true
+                        )
+                    }
+                }
+            },
+            floatingActionButton = {
+                GradientFAB(
+                    onClick = { showAddDialog = true },
+                    icon = Icons.Default.Add,
+                    gradient = GradientPurple
+                )
+            }
+        ) { padding ->
+            if (notes.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    EmptyState(
+                        emoji = "📝",
+                        title = if (searchQuery.isNotEmpty()) "No notes found" else "No notes yet!",
+                        subtitle = if (searchQuery.isNotEmpty()) "Try a different search" else "Tap + to create your first note"
                     )
                 }
-            }
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = MaterialTheme.colorScheme.secondary,
-                contentColor = MaterialTheme.colorScheme.onSecondary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Note")
-            }
-        }
-    ) { padding ->
-        if (notes.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("📝", style = MaterialTheme.typography.displayLarge)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        if (searchQuery.isNotEmpty()) "No notes found" else "No notes yet!",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(notes, key = { it.id }) { note ->
+                        ModernNoteCard(note = note, onDelete = { viewModel.delete(note) })
+                    }
+                    item { Spacer(modifier = Modifier.height(100.dp)) }
                 }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(notes, key = { it.id }) { note ->
-                    NoteCard(
-                        note = note,
-                        onDelete = { viewModel.delete(note) }
-                    )
-                }
-                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
     }
 
-    // Add Note Dialog
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = {
-                showAddDialog = false
-                newTitle = ""
-                newContent = ""
-                selectedColor = 0
+                showAddDialog = false; newTitle = ""; newContent = ""; selectedColor = 0
             },
-            title = { Text("New Note", fontWeight = FontWeight.Bold) },
+            title = { Text("✨ New Note", fontWeight = FontWeight.Bold) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     OutlinedTextField(
-                        value = newTitle,
-                        onValueChange = { newTitle = it },
-                        label = { Text("Title") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        value = newTitle, onValueChange = { newTitle = it },
+                        label = { Text("Title") }, singleLine = true,
+                        modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)
                     )
                     OutlinedTextField(
-                        value = newContent,
-                        onValueChange = { newContent = it },
-                        label = { Text("Content") },
-                        maxLines = 8,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 120.dp)
+                        value = newContent, onValueChange = { newContent = it },
+                        label = { Text("Write your note...") }, maxLines = 8,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
+                        shape = RoundedCornerShape(14.dp)
                     )
                     Text("Color", style = MaterialTheme.typography.labelLarge)
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         items(noteColors.size) { index ->
                             Box(
                                 modifier = Modifier
-                                    .size(32.dp)
+                                    .size(36.dp)
                                     .clip(CircleShape)
                                     .background(noteColors[index])
                                     .clickable { selectedColor = index }
                                     .then(
                                         if (selectedColor == index)
-                                            Modifier.background(
-                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                                CircleShape
-                                            )
+                                            Modifier.padding(2.dp).background(Color.White, CircleShape)
                                         else Modifier
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (selectedColor == index) {
                                     Box(
-                                        modifier = Modifier
-                                            .size(20.dp)
+                                        modifier = Modifier.size(24.dp)
                                             .background(noteColors[index], CircleShape)
                                     )
                                 }
@@ -204,21 +188,17 @@ fun NotesScreen(
                     onClick = {
                         if (newTitle.isNotBlank()) {
                             viewModel.addNote(newTitle.trim(), newContent.trim(), selectedColor)
-                            showAddDialog = false
-                            newTitle = ""
-                            newContent = ""
-                            selectedColor = 0
+                            showAddDialog = false; newTitle = ""; newContent = ""; selectedColor = 0
                         }
                     },
-                    enabled = newTitle.isNotBlank()
-                ) { Text("Save") }
+                    enabled = newTitle.isNotBlank(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Secondary)
+                ) { Text("Save Note") }
             },
             dismissButton = {
                 TextButton(onClick = {
-                    showAddDialog = false
-                    newTitle = ""
-                    newContent = ""
-                    selectedColor = 0
+                    showAddDialog = false; newTitle = ""; newContent = ""; selectedColor = 0
                 }) { Text("Cancel") }
             }
         )
@@ -226,65 +206,48 @@ fun NotesScreen(
 }
 
 @Composable
-fun NoteCard(
-    note: NoteEntity,
-    onDelete: () -> Unit
-) {
+fun ModernNoteCard(note: NoteEntity, onDelete: () -> Unit) {
     val bgColor = if (note.color in noteColors.indices) noteColors[note.color] else noteColors[0]
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()) }
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth().shadow(
+            elevation = 4.dp,
+            shape = RoundedCornerShape(18.dp),
+            ambientColor = bgColor.copy(alpha = 0.3f),
+            spotColor = bgColor.copy(alpha = 0.3f)
+        ),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = bgColor)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(18.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = note.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
+                    note.title, style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold, maxLines = 1,
+                    overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)
                 )
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(18.dp)
-                    )
+                IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Default.Delete, "Delete", tint = Color.Gray.copy(alpha = 0.6f),
+                        modifier = Modifier.size(16.dp))
                 }
             }
-
             if (note.content.isNotBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = note.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.DarkGray,
-                    maxLines = 4,
+                    note.content, style = MaterialTheme.typography.bodyMedium,
+                    color = Color.DarkGray.copy(alpha = 0.8f), maxLines = 4,
                     overflow = TextOverflow.Ellipsis
                 )
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = dateFormat.format(Date(note.updatedAt)),
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray
+                dateFormat.format(Date(note.updatedAt)),
+                style = MaterialTheme.typography.labelSmall, color = Color.Gray
             )
         }
     }
