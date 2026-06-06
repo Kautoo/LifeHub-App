@@ -8,94 +8,124 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.fizi.lifehub.R
 
-// ─── Space Grotesk (Headers) ───
+// ─── Space Grotesk (Display & Headlines) ───
 val SpaceGrotesk = FontFamily(
     Font(R.font.space_grotesk_regular, FontWeight.Normal),
     Font(R.font.space_grotesk_medium, FontWeight.Medium),
-    Font(R.font.space_grotesk_bold, FontWeight.Bold)
+    Font(R.font.space_grotesk_bold, FontWeight.Bold),
 )
 
-// ─── Plus Jakarta Sans (Body) ───
-val PlusJakarta = FontFamily(
+// ─── Plus Jakarta Sans (Body & Labels) ───
+val PlusJakartaSans = FontFamily(
     Font(R.font.plus_jakarta_regular, FontWeight.Normal),
     Font(R.font.plus_jakarta_medium, FontWeight.Medium),
     Font(R.font.plus_jakarta_bold, FontWeight.Bold),
-    Font(R.font.plus_jakarta_extrabold, FontWeight.ExtraBold)
 )
 
-// ─── Typography ───
+// ═══════════════════════════════════════════
+// Stitch Design System Typography
+// ═══════════════════════════════════════════
 val Typography = Typography(
-    // Display — Space Grotesk Bold
+    // Display: Space Grotesk 48sp Bold
     displayLarge = TextStyle(
         fontFamily = SpaceGrotesk,
         fontWeight = FontWeight.Bold,
-        fontSize = 34.sp,
-        lineHeight = 42.sp,
-        letterSpacing = (-0.5).sp
+        fontSize = 48.sp,
+        lineHeight = 56.sp,
+        letterSpacing = (-0.02).sp,
     ),
-    // Headlines — Space Grotesk
+    displayMedium = TextStyle(
+        fontFamily = SpaceGrotesk,
+        fontWeight = FontWeight.Bold,
+        fontSize = 40.sp,
+        lineHeight = 48.sp,
+        letterSpacing = (-0.02).sp,
+    ),
+    displaySmall = TextStyle(
+        fontFamily = SpaceGrotesk,
+        fontWeight = FontWeight.Bold,
+        fontSize = 32.sp,
+        lineHeight = 40.sp,
+    ),
+
+    // Headlines: Space Grotesk
     headlineLarge = TextStyle(
         fontFamily = SpaceGrotesk,
         fontWeight = FontWeight.Bold,
-        fontSize = 28.sp,
-        lineHeight = 36.sp,
-        letterSpacing = (-0.3).sp
+        fontSize = 32.sp,
+        lineHeight = 40.sp,
     ),
     headlineMedium = TextStyle(
         fontFamily = SpaceGrotesk,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 24.sp,
-        lineHeight = 32.sp
+        lineHeight = 32.sp,
     ),
-    // Titles — Plus Jakarta SemiBold
+    headlineSmall = TextStyle(
+        fontFamily = SpaceGrotesk,
+        fontWeight = FontWeight.Bold,
+        fontSize = 20.sp,
+        lineHeight = 28.sp,
+    ),
+
+    // Titles: Plus Jakarta Sans SemiBold
     titleLarge = TextStyle(
-        fontFamily = PlusJakarta,
+        fontFamily = PlusJakartaSans,
         fontWeight = FontWeight.SemiBold,
         fontSize = 20.sp,
-        lineHeight = 28.sp
+        lineHeight = 28.sp,
     ),
     titleMedium = TextStyle(
-        fontFamily = PlusJakarta,
+        fontFamily = PlusJakartaSans,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 18.sp,
+        lineHeight = 28.sp,
+    ),
+    titleSmall = TextStyle(
+        fontFamily = PlusJakartaSans,
         fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
         lineHeight = 24.sp,
-        letterSpacing = 0.15.sp
     ),
-    // Body — Plus Jakarta
+
+    // Body: Plus Jakarta Sans Regular
     bodyLarge = TextStyle(
-        fontFamily = PlusJakarta,
+        fontFamily = PlusJakartaSans,
+        fontWeight = FontWeight.Normal,
+        fontSize = 18.sp,
+        lineHeight = 28.sp,
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = PlusJakartaSans,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = PlusJakarta,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.25.sp
     ),
     bodySmall = TextStyle(
-        fontFamily = PlusJakarta,
+        fontFamily = PlusJakartaSans,
         fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.4.sp
-    ),
-    // Labels — Plus Jakarta Medium
-    labelLarge = TextStyle(
-        fontFamily = PlusJakarta,
-        fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
         lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
+    ),
+
+    // Labels: Plus Jakarta Sans Medium/SemiBold
+    labelLarge = TextStyle(
+        fontFamily = PlusJakartaSans,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.01.sp,
+    ),
+    labelMedium = TextStyle(
+        fontFamily = PlusJakartaSans,
+        fontWeight = FontWeight.Medium,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
     ),
     labelSmall = TextStyle(
-        fontFamily = PlusJakarta,
+        fontFamily = PlusJakartaSans,
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
         lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
-    )
+    ),
 )

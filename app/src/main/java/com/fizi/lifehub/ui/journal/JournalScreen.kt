@@ -1,6 +1,9 @@
 package com.fizi.lifehub.ui.journal
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +30,10 @@ import com.fizi.lifehub.data.local.entity.JournalEntryEntity
 import com.fizi.lifehub.data.local.entity.Mood
 import com.fizi.lifehub.ui.components.*
 import com.fizi.lifehub.ui.theme.*
+
+// ═══════════════════════════════════════════
+// 📓 JournalScreen — Google Stitch Design
+// ═══════════════════════════════════════════
 
 private val moodEmojis = mapOf(
     Mood.HAPPY to "😊", Mood.NEUTRAL to "😐", Mood.SAD to "😢",
@@ -47,35 +55,66 @@ fun JournalScreen(viewModel: JournalViewModel = hiltViewModel()) {
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(Color(0xFF7C4DFF).copy(alpha = 0.06f), Color.Transparent)
+                FadeInOnAppear(delayMs = 0) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(Primary.copy(alpha = 0.06f), Color.Transparent)
+                                )
                             )
-                        )
-                        .statusBarsPadding()
-                        .padding(horizontal = 20.dp, vertical = 12.dp)
-                ) {
-                    Text(
-                        "📓 Journal",
-                        style = MaterialTheme.typography.displayLarge,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                    Text(
-                        "$entryCount entries",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                            .statusBarsPadding()
+                            .padding(horizontal = 20.dp, vertical = 16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "Journal",
+                                    style = MaterialTheme.typography.displaySmall.copy(
+                                        fontFamily = SpaceGrotesk,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    "$entryCount entries",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(Primary.copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Outlined.MenuBook,
+                                    contentDescription = null,
+                                    tint = Primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             },
             floatingActionButton = {
-                GradientFAB(
-                    onClick = { showAddDialog = true },
-                    icon = Icons.Default.Add,
-                    gradient = GradientPurple
-                )
+                SlideInFromBottom(delayMs = 400) {
+                    GradientFAB(
+                        onClick = { showAddDialog = true },
+                        icon = Icons.Default.Add,
+                        gradient = GradientFab
+                    )
+                }
             }
         ) { padding ->
             LazyColumn(
@@ -85,16 +124,20 @@ fun JournalScreen(viewModel: JournalViewModel = hiltViewModel()) {
             ) {
                 if (entries.isEmpty()) {
                     item {
-                        EmptyState(
-                            emoji = "📓",
-                            title = "Start journaling",
-                            subtitle = "Write your first entry!"
-                        )
+                        FadeInOnAppear(delayMs = 200) {
+                            EmptyState(
+                                emoji = "📓",
+                                title = "Start journaling",
+                                subtitle = "Write your first entry!"
+                            )
+                        }
                     }
                 }
 
                 items(entries, key = { it.id }) { entry ->
-                    JournalEntryItem(entry) { viewModel.deleteEntry(entry) }
+                    FadeInOnAppear(delayMs = 150) {
+                        StitchJournalEntryItem(entry) { viewModel.deleteEntry(entry) }
+                    }
                 }
 
                 item { Spacer(modifier = Modifier.height(100.dp)) }
@@ -103,85 +146,164 @@ fun JournalScreen(viewModel: JournalViewModel = hiltViewModel()) {
     }
 
     if (showAddDialog) {
-        AlertDialog(
-            onDismissRequest = { showAddDialog = false; newContent = ""; selectedMood = Mood.NEUTRAL },
-            title = { Text("📝 New Entry", fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Text("How are you feeling?", style = MaterialTheme.typography.labelLarge)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Mood.entries.forEach { mood ->
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (selectedMood == mood) Primary.copy(alpha = 0.15f)
-                                        else MaterialTheme.colorScheme.surfaceVariant
-                                    )
-                                    .clickable { selectedMood = mood },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(moodEmojis[mood] ?: "😐", fontSize = 24.sp)
-                            }
-                        }
-                    }
-                    OutlinedTextField(
-                        value = newContent, onValueChange = { newContent = it },
-                        label = { Text("What's on your mind?") },
-                        placeholder = { Text("Today I...") },
-                        minLines = 4, maxLines = 8,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp)
-                    )
-                }
+        StitchJournalDialog(
+            newContent = newContent,
+            selectedMood = selectedMood,
+            onContentChange = { newContent = it },
+            onMoodChange = { selectedMood = it },
+            onDismiss = {
+                showAddDialog = false; newContent = ""; selectedMood = Mood.NEUTRAL
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (newContent.isNotBlank()) {
-                            viewModel.addEntry(newContent.trim(), selectedMood)
-                            showAddDialog = false; newContent = ""; selectedMood = Mood.NEUTRAL
-                        }
-                    },
-                    enabled = newContent.isNotBlank(),
-                    shape = RoundedCornerShape(14.dp)
-                ) { Text("Save") }
-            },
-            dismissButton = {
-                TextButton(onClick = {
+            onConfirm = {
+                if (newContent.isNotBlank()) {
+                    viewModel.addEntry(newContent.trim(), selectedMood)
                     showAddDialog = false; newContent = ""; selectedMood = Mood.NEUTRAL
-                }) { Text("Cancel") }
+                }
             }
         )
     }
 }
 
+// ═══════════════════════════════════════════
+// 🃏 Stitch Journal Entry Item
+// ═══════════════════════════════════════════
+
 @Composable
-fun JournalEntryItem(entry: JournalEntryEntity, onDelete: () -> Unit) {
+fun StitchJournalEntryItem(entry: JournalEntryEntity, onDelete: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().shadow(4.dp, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(20.dp)),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = SurfaceContainerLow.copy(alpha = 0.4f)
+        )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(moodEmojis[entry.mood] ?: "😐", fontSize = 28.sp)
-                Spacer(modifier = Modifier.width(10.dp))
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Primary.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(moodEmojis[entry.mood] ?: "😐", fontSize = 24.sp)
+                }
+                Spacer(modifier = Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(entry.date, style = MaterialTheme.typography.labelMedium, color = Primary)
                     Text(
                         entry.mood.name.lowercase().replaceFirstChar { it.uppercase() },
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        entry.date,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Default.Delete, "Delete", modifier = Modifier.size(16.dp))
+                IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        Icons.Default.Delete, "Delete",
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(entry.content, style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(14.dp))
+            Text(
+                entry.content,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
     }
+}
+
+// ═══════════════════════════════════════════
+// 💬 Stitch Journal Dialog
+// ═══════════════════════════════════════════
+
+@Composable
+private fun StitchJournalDialog(
+    newContent: String,
+    selectedMood: Mood,
+    onContentChange: (String) -> Unit,
+    onMoodChange: (Mood) -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = SurfaceContainer,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Text(
+                "New Entry",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontFamily = SpaceGrotesk,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    "How are you feeling?",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Mood.entries.forEach { mood ->
+                        val isSelected = selectedMood == mood
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (isSelected) Primary.copy(alpha = 0.2f)
+                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                )
+                                .then(
+                                    if (isSelected) Modifier.border(2.dp, Primary.copy(alpha = 0.5f), CircleShape)
+                                    else Modifier
+                                )
+                                .clickable { onMoodChange(mood) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(moodEmojis[mood] ?: "😐", fontSize = 22.sp)
+                        }
+                    }
+                }
+                OutlinedTextField(
+                    value = newContent, onValueChange = onContentChange,
+                    label = { Text("What's on your mind?") },
+                    placeholder = { Text("Today I...") },
+                    minLines = 4, maxLines = 8,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Primary,
+                        focusedLabelColor = Primary
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = newContent.isNotBlank(),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainer)
+            ) {
+                Text("Save", color = Color.White, fontWeight = FontWeight.SemiBold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    )
 }

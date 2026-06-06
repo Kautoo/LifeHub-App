@@ -11,16 +11,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
+
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,46 +50,38 @@ fun HabitScreen(viewModel: HabitViewModel = hiltViewModel()) {
             containerColor = Color.Transparent,
             topBar = {
                 FadeInOnAppear(delayMs = 0) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth()
-                            .background(Brush.verticalGradient(listOf(HabitGreen.copy(alpha = 0.08f), Color.Transparent)))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
                             .statusBarsPadding()
                             .padding(horizontal = 20.dp, vertical = 12.dp)
                     ) {
-                        Row(modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text("🎯 Habits", style = MaterialTheme.typography.displayLarge, fontWeight = FontWeight.ExtraBold)
-                                Text("$completedToday of $totalHabits today",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(60.dp)) {
-                                CircularProgressIndicator(
-                                    progress = { progress }, modifier = Modifier.fillMaxSize(),
-                                    strokeWidth = 6.dp, color = HabitGreen, trackColor = HabitGreen.copy(alpha = 0.1f)
-                                )
-                                Text("${(progress * 100).toInt()}%",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold, color = HabitGreen)
-                            }
-                        }
+                        Text(
+                            "🎯 Habits",
+                            style = MaterialTheme.typography.displayLarge,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            "$completedToday of $totalHabits completed today",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             },
             floatingActionButton = {
                 SlideInFromBottom(delayMs = 400) {
-                    GradientFAB(onClick = { showDialog = true }, icon = Icons.Default.Add,
-                        gradient = Brush.linearGradient(listOf(HabitGreen, Color(0xFF00C853))))
+                    GradientFAB(
+                        onClick = { showDialog = true }, icon = Icons.Default.Add,
+                        gradient = Brush.linearGradient(listOf(HabitGreen, Color(0xFF00C853)))
+                    )
                 }
             }
         ) { padding ->
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 if (habits.isEmpty()) {
                     item {
@@ -101,88 +91,32 @@ fun HabitScreen(viewModel: HabitViewModel = hiltViewModel()) {
                     }
                 }
 
+                // ─── Daily Progress Card ───
                 if (habits.isNotEmpty()) {
                     item {
                         FadeInOnAppear(delayMs = 100) {
-                            GradientGlassCard(
-                                modifier = Modifier.fillMaxWidth().pressEffect(),
-                                gradient = Brush.linearGradient(listOf(HabitGreen.copy(alpha = 0.9f), Color(0xFF00C853).copy(alpha = 0.7f)))
-                            ) {
-                                Row(modifier = Modifier.fillMaxWidth().padding(20.dp),
-                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        BouncyEmoji("🎯", size = 32)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text("$completedToday", fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
-                                        Text("Done", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.8f))
-                                    }
-                                    Box(modifier = Modifier.width(1.dp).height(50.dp).background(Color.White.copy(alpha = 0.3f)))
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        BouncyEmoji("📋", size = 32)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text("$totalHabits", fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
-                                        Text("Total", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.8f))
-                                    }
-                                    Box(modifier = Modifier.width(1.dp).height(50.dp).background(Color.White.copy(alpha = 0.3f)))
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        val msg = when { progress >= 1.0f -> "🏆"; progress >= 0.5f -> "💪"; else -> "🌱" }
-                                        BouncyEmoji(msg, size = 32)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(when { progress >= 1.0f -> "Perfect!"; progress >= 0.5f -> "Great!"; else -> "Start!" },
-                                            style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White)
-                                    }
-                                }
-                            }
+                            DailyProgressCard(
+                                completed = completedToday,
+                                total = totalHabits,
+                                progress = progress
+                            )
                         }
                     }
                 }
 
+                // ─── Habit Cards ───
                 items(habits, key = { it.id }) { habit ->
                     val isCompleted = completionStates[habit.id] == true
-                    var visible by remember { mutableStateOf(false) }
-                    LaunchedEffect(Unit) { kotlinx.coroutines.delay(200); visible = true }
-                    AnimatedVisibility(
-                        visible = visible,
-                        enter = fadeIn(tween(400)) + slideInHorizontally(
-                            spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow), initialOffsetX = { it / 5 }
+                    FadeInOnAppear(delayMs = 150) {
+                        HabitCard(
+                            icon = habit.icon,
+                            name = habit.name,
+                            frequency = habit.frequency,
+                            streak = habit.streak,
+                            isCompleted = isCompleted,
+                            onToggle = { viewModel.toggleToday(habit.id) },
+                            onDelete = { viewModel.delete(habit) }
                         )
-                    ) {
-                        var isPressed by remember { mutableStateOf(false) }
-                        val scale by animateFloatAsState(
-                            targetValue = if (isPressed) 0.96f else 1f,
-                            animationSpec = spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium), label = "habitScale"
-                        )
-                        GlassCard(
-                            modifier = Modifier.fillMaxWidth()
-                                .graphicsLayer { scaleX = scale; scaleY = scale }
-                                .clickable { isPressed = true; viewModel.toggleToday(habit.id) }
-                        ) {
-                            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Box(modifier = Modifier.size(48.dp).clip(CircleShape)
-                                    .background(if (isCompleted) HabitGreen.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    AnimatedContent(targetState = isCompleted,
-                                        transitionSpec = { scaleIn(spring(Spring.DampingRatioMediumBouncy)) togetherWith scaleOut(tween(150)) },
-                                        label = "habitCheck"
-                                    ) { completed -> Text(if (completed) "✅" else habit.icon, fontSize = 24.sp) }
-                                }
-                                Spacer(modifier = Modifier.width(14.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(habit.name, fontWeight = FontWeight.SemiBold,
-                                        color = if (isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
-                                    Text(habit.frequency.name.lowercase().replaceFirstChar { it.uppercase() },
-                                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                                IconButton(onClick = { viewModel.delete(habit) }, modifier = Modifier.size(32.dp)) {
-                                    Icon(Icons.Default.Delete, "Delete", modifier = Modifier.size(18.dp),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                            }
-                        }
-                        LaunchedEffect(isPressed) { if (isPressed) { kotlinx.coroutines.delay(150); isPressed = false } }
                     }
                 }
 
@@ -196,21 +130,25 @@ fun HabitScreen(viewModel: HabitViewModel = hiltViewModel()) {
             onDismissRequest = { showDialog = false; newName = ""; newIcon = "💪"; newFrequency = HabitFrequency.DAILY },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    BouncyEmoji("🎯", size = 28); Spacer(modifier = Modifier.width(8.dp))
+                    BouncyEmoji("🎯", size = 28)
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text("New Habit", fontWeight = FontWeight.Bold)
                 }
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    OutlinedTextField(value = newName, onValueChange = { newName = it },
+                    OutlinedTextField(
+                        value = newName, onValueChange = { newName = it },
                         label = { Text("Habit name") }, singleLine = true,
-                        modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp))
+                        modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)
+                    )
                     Text("Icon", style = MaterialTheme.typography.labelLarge)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         habitIcons.take(6).forEach { icon ->
-                            Box(modifier = Modifier.size(40.dp).clip(CircleShape)
-                                .background(if (newIcon == icon) Primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant)
-                                .clickable { newIcon = icon },
+                            Box(
+                                modifier = Modifier.size(40.dp).clip(CircleShape)
+                                    .background(if (newIcon == icon) Primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant)
+                                    .clickable { newIcon = icon },
                                 contentAlignment = Alignment.Center
                             ) { Text(icon, fontSize = 20.sp) }
                         }
@@ -219,14 +157,17 @@ fun HabitScreen(viewModel: HabitViewModel = hiltViewModel()) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         HabitFrequency.entries.forEach { freq ->
                             val isSelected = newFrequency == freq
-                            Box(modifier = Modifier.clip(RoundedCornerShape(12.dp))
-                                .background(if (isSelected) Primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant)
-                                .clickable { newFrequency = freq }
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                            Box(
+                                modifier = Modifier.clip(RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) Primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant)
+                                    .clickable { newFrequency = freq }
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
                             ) {
-                                Text(freq.name.lowercase().replaceFirstChar { it.uppercase() },
+                                Text(
+                                    freq.name.lowercase().replaceFirstChar { it.uppercase() },
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) Primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                                    color = if (isSelected) Primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }
@@ -248,5 +189,150 @@ fun HabitScreen(viewModel: HabitViewModel = hiltViewModel()) {
                 TextButton(onClick = { showDialog = false; newName = ""; newIcon = "💪"; newFrequency = HabitFrequency.DAILY }) { Text("Cancel") }
             }
         )
+    }
+}
+
+// ─── Daily Progress Card ───
+@Composable
+private fun DailyProgressCard(
+    completed: Int,
+    total: Int,
+    progress: Float
+) {
+    GradientGlassCard(
+        modifier = Modifier.fillMaxWidth(),
+        gradient = Brush.linearGradient(
+            listOf(HabitGreen.copy(alpha = 0.85f), Color(0xFF00C853).copy(alpha = 0.65f))
+        ),
+        cornerRadius = 20.dp
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        "Today's Progress",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        "$completed of $total habits",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.75f)
+                    )
+                }
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(52.dp)) {
+                    CircularProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.fillMaxSize(),
+                        strokeWidth = 5.dp,
+                        color = Color.White,
+                        trackColor = Color.White.copy(alpha = 0.2f)
+                    )
+                    Text(
+                        "${(progress * 100).toInt()}%",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(14.dp))
+            // Progress bar
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color.White.copy(alpha = 0.2f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(fraction = progress.coerceIn(0f, 1f))
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color.White)
+                )
+            }
+        }
+    }
+}
+
+// ─── Habit Card ───
+@Composable
+private fun HabitCard(
+    icon: String,
+    name: String,
+    frequency: HabitFrequency,
+    streak: Int,
+    isCompleted: Boolean,
+    onToggle: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isCompleted) HabitGreen.copy(alpha = 0.08f) else SurfaceContainerHigh
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Emoji icon circle
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(if (isCompleted) HabitGreen.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(icon, fontSize = 24.sp)
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            // Name + streak + frequency
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        frequency.name.lowercase().replaceFirstChar { it.uppercase() },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (streak > 0) {
+                        Text(
+                            "  ·  🔥 $streak streak",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = HabitStreak,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+
+            // Completion toggle checkbox
+            Checkbox(
+                checked = isCompleted,
+                onCheckedChange = { onToggle() },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = HabitGreen,
+                    uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                )
+            )
+        }
     }
 }
