@@ -16,7 +16,10 @@ Design a modern, premium Android productivity app called "LifeHub" - an all-in-o
 - Surface: #16213E (Dark Blue) with 0.95 alpha (glassmorphism)
 - Cards: White/White with 0.08 alpha overlays on dark backgrounds
 
-**Typography:** Bold headers (ExtraBold weight), clean body text, emoji icons for visual delight.
+**Typography:** 
+- Display/Headlines: **Space Grotesk** (Bold, techy, modern geometric font)
+- Body/Labels: **Plus Jakarta Sans** (Clean, premium, slightly rounded)
+- Bold headers (ExtraBold weight), clean body text, emoji icons for visual delight.
 
 **Bottom Navigation:** 5 tabs - Home (🏠), Todo (✅), Notes (📝), Habits (🎯), More (☰)
 
@@ -28,46 +31,48 @@ Design a modern, premium Android productivity app called "LifeHub" - an all-in-o
 Design a premium splash screen for "LifeHub" app:
 - Deep dark gradient background (#0D1117 to #1A1A2E)
 - Large centered app icon with subtle glow effect
-- "LifeHub" text in ExtraBold white font
-- Tagline: "Your life, organized. One hub at a time."
+- "LifeHub" text in **Space Grotesk Bold** white font (34sp)
+- Tagline "Your life, organized. One hub at a time." in **Plus Jakarta Sans Regular** (14sp, white with 0.8 alpha)
 - Animated loading dots at bottom (3 dots, pulsing)
 - Floating decorative circles in background (subtle purple/cyan)
 - Clean, minimal, premium feel
 
 ### 2. Home Dashboard
 Design a modern home dashboard screen:
-- Greeting header: "Good Morning ☀️ Fizi" with time-based greeting
-- Motivational quote card below greeting (gradient purple card)
+- Greeting header: "Good Morning ☀️ Fizi" in **Space Grotesk Bold** (28sp) with time-based greeting
+- Username "Fizi" in **Plus Jakarta Sans Regular** (16sp, onSurfaceVariant color)
+- Motivational quote card below greeting (gradient purple card) in **Plus Jakarta Sans Medium** (14sp)
 - Horizontal scrolling stat cards (4 cards):
-  - 📋 Pending Tasks (count)
+  - 📋 Pending Tasks (count) — value in **Space Grotesk Bold** (20sp)
   - ✅ Completed (count)
   - 🎯 Habits (count)
   - 💰 Balance (RM amount)
-- Quick Access section: 4 gradient cards in a row (Todo, Notes, Budget, Habits) - each with emoji icon and gradient background
-- Recent Tasks section: top 5 tasks with status indicators
-- Today's Progress card: large gradient card showing habits done, tasks completed, pending count
-- Branding card at bottom: "LifeHub - Your life, organized"
+- Quick Access section: 4 gradient cards in a row (Todo, Notes, Budget, Habits) - each with emoji icon and gradient background, title in **Plus Jakarta Sans Bold** (15sp)
+- Recent Tasks section: top 5 tasks with status indicators, title in **Plus Jakarta Sans SemiBold**
+- Today's Progress card: large gradient card showing habits done, tasks completed, pending count — numbers in **Space Grotesk ExtraBold** (28sp)
+- Branding card at bottom: "LifeHub" in **Space Grotesk Bold** (24sp), tagline in **Plus Jakarta Sans Regular**
 - Glassmorphism cards with soft shadows
 - Staggered animation (cards appear one by one)
 
 ### 3. Todo/Task Screen
 Design a task management screen:
-- Header: "✅ Tasks" with "X pending • Y done" subtitle
-- Circular progress indicator showing completion percentage
+- Header: "✅ Tasks" in **Space Grotesk Bold** (34sp) with "X pending • Y done" subtitle in **Plus Jakarta Sans Regular** (14sp)
+- Circular progress indicator showing completion percentage — percentage in **Plus Jakarta Sans Bold**
 - Task cards with:
   - Color-coded priority bar on left (🔴 High, 🟡 Medium, 🟢 Low)
   - Checkbox with animated checkmark
-  - Title (strikethrough when done)
-  - Description preview
+  - Title in **Plus Jakarta Sans SemiBold** (strikethrough when done)
+  - Description in **Plus Jakarta Sans Regular** (bodySmall, onSurfaceVariant color)
+  - Priority label in **Plus Jakarta Sans Medium** (labelSmall)
   - Delete button
-- Section headers: "To Do" and "Completed"
+- Section headers: "To Do" / "Completed" in **Space Grotesk Bold** (titleLarge)
 - Floating action button (+) with gradient
 - Add Task dialog:
-  - Title input
+  - Title input with **Plus Jakarta Sans** text
   - Description input
-  - Priority selector (3 chips: Low, Medium, High)
-  - "Add Task" gradient button
-- Empty state: "✨ All clear! Tap + to add your first task"
+  - Priority selector (3 chips: Low, Medium, High) in **Plus Jakarta Sans Medium**
+  - "Add Task" gradient button in **Plus Jakarta Sans Bold**
+- Empty state: "✨ All clear!" title in **Space Grotesk Bold**, subtitle in **Plus Jakarta Sans Regular**
 
 ### 4. Notes Screen
 Design a notes management screen:
@@ -253,11 +258,19 @@ Create a consistent design system for LifeHub:
 - Icon: White, 24dp
 
 **Typography:**
-- Display: 28sp, ExtraBold
-- Title: 20sp, Bold
-- Body: 14sp, Normal
-- Label: 12sp, Medium
-- All text: White on dark, Dark on light cards
+- Display/Headlines font: **Space Grotesk** (Bold, techy, modern geometric font)
+  - Display Large: 34sp, Bold, letter-spacing -0.5
+  - Headline Large: 28sp, Bold, letter-spacing -0.3
+  - Headline Medium: 24sp, Bold
+- Body/Labels font: **Plus Jakarta Sans** (Clean, premium, slightly rounded)
+  - Title Large: 20sp, SemiBold
+  - Body Large: 16sp, Normal
+  - Body Medium: 14sp, Normal
+  - Label Large: 14sp, Medium
+  - Label Small: 11sp, Medium
+- All text: White on dark backgrounds, Dark on light cards
+- Use **Space Grotesk** for all headers, screen titles, and big text
+- Use **Plus Jakarta Sans** for body content, descriptions, labels, and small text
 
 **Animations:**
 - Spring physics (bouncy)
@@ -301,3 +314,32 @@ Create a consistent design system for LifeHub:
 - Floating emoji (sine wave Y offset)
 - Gentle scale pulse (1.0 → 1.1)
 - Fade in with delay
+
+---
+
+## 🔤 Font Usage Guide (IMPORTANT!)
+
+### Space Grotesk (Headers & Display)
+Use for ALL headers, titles, big numbers, and display text:
+- Screen titles (e.g., "✅ Tasks", "💰 Budget")
+- Section headers (e.g., "To Do", "Completed")
+- Big numbers (balance, counts, percentages)
+- App name "LifeHub"
+- Greeting text ("Good Morning ☀️")
+- Stat values on cards
+
+### Plus Jakarta Sans (Body & Labels)
+Use for ALL body content, descriptions, and small text:
+- Task titles and descriptions
+- Note content
+- Labels and captions
+- Button text
+- Input field text
+- Subtitles and metadata
+- Empty state subtitles
+- Dialog body text
+
+### Rule of Thumb:
+- If it's BIG and BOLD → **Space Grotesk**
+- If it's readable body text → **Plus Jakarta Sans**
+- Never use default Android system font!
