@@ -1,8 +1,7 @@
 package com.fizi.lifehub.ui.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -11,10 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,25 +31,27 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.fizi.lifehub.ui.budget.BudgetScreen
 import com.fizi.lifehub.ui.habits.HabitScreen
+import com.fizi.lifehub.ui.home.HomeScreen
 import com.fizi.lifehub.ui.notes.NotesScreen
 import com.fizi.lifehub.ui.theme.*
 import com.fizi.lifehub.ui.todo.TodoScreen
 
-sealed class Screen(val route: String, val title: String, val icon: ImageVector, val emoji: String) {
-    data object Todo : Screen("todo", "Todo", Icons.Default.CheckCircle, "✅")
-    data object Notes : Screen("notes", "Notes", Icons.Default.Edit, "📝")
-    data object Budget : Screen("budget", "Budget", Icons.Default.Home, "💰")
-    data object Habits : Screen("habits", "Habits", Icons.Default.Repeat, "🎯")
+sealed class Screen(val route: String, val title: String, val emoji: String) {
+    data object Home : Screen("home", "Home", "🏠")
+    data object Todo : Screen("todo", "Todo", "✅")
+    data object Notes : Screen("notes", "Notes", "📝")
+    data object Budget : Screen("budget", "Budget", "💰")
+    data object Habits : Screen("habits", "Habits", "🎯")
 }
 
 val bottomNavItems = listOf(
+    Screen.Home,
     Screen.Todo,
     Screen.Notes,
     Screen.Budget,
     Screen.Habits
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LifeHubNavHost() {
     val navController = rememberNavController()
@@ -61,20 +59,19 @@ fun LifeHubNavHost() {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            // Floating Bottom Bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .shadow(
-                            elevation = 20.dp,
+                            elevation = 24.dp,
                             shape = RoundedCornerShape(28.dp),
-                            ambientColor = Color.Black.copy(alpha = 0.1f),
-                            spotColor = Color.Black.copy(alpha = 0.1f)
+                            ambientColor = Color.Black.copy(alpha = 0.08f),
+                            spotColor = Color.Black.copy(alpha = 0.08f)
                         ),
                     shape = RoundedCornerShape(28.dp),
                     colors = CardDefaults.cardColors(
@@ -84,7 +81,7 @@ fun LifeHubNavHost() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 8.dp),
+                            .padding(horizontal = 6.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -96,12 +93,21 @@ fun LifeHubNavHost() {
 
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(20.dp))
+                                    .clip(RoundedCornerShape(18.dp))
                                     .background(
                                         if (selected) Primary.copy(alpha = 0.1f)
                                         else Color.Transparent
                                     )
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    .clickable {
+                                        navController.navigate(screen.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    }
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Column(
@@ -129,22 +135,6 @@ fun LifeHubNavHost() {
                                         Spacer(modifier = Modifier.height(4.dp))
                                     }
                                 }
-
-                                // Clickable overlay
-                                Box(
-                                    modifier = Modifier
-                                        .matchParentSize()
-                                        .clip(RoundedCornerShape(20.dp))
-                                        .clickable {
-                                            navController.navigate(screen.route) {
-                                                popUpTo(navController.graph.findStartDestination().id) {
-                                                    saveState = true
-                                                }
-                                                launchSingleTop = true
-                                                restoreState = true
-                                            }
-                                        }
-                                )
                             }
                         }
                     }
@@ -154,7 +144,7 @@ fun LifeHubNavHost() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Todo.route,
+            startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding),
             enterTransition = {
                 fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
@@ -167,6 +157,34 @@ fun LifeHubNavHost() {
                 fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
             }
         ) {
+            composable(Screen.Home.route) {
+                HomeScreen(
+                    onNavigateToTodo = {
+                        navController.navigate(Screen.Todo.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true; restoreState = true
+                        }
+                    },
+                    onNavigateToNotes = {
+                        navController.navigate(Screen.Notes.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true; restoreState = true
+                        }
+                    },
+                    onNavigateToBudget = {
+                        navController.navigate(Screen.Budget.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true; restoreState = true
+                        }
+                    },
+                    onNavigateToHabits = {
+                        navController.navigate(Screen.Habits.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true; restoreState = true
+                        }
+                    }
+                )
+            }
             composable(Screen.Todo.route) { TodoScreen() }
             composable(Screen.Notes.route) { NotesScreen() }
             composable(Screen.Budget.route) { BudgetScreen() }

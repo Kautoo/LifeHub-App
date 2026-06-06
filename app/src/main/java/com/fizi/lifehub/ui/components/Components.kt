@@ -2,7 +2,6 @@ package com.fizi.lifehub.ui.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,17 +11,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fizi.lifehub.ui.theme.*
 
-// ─── Gradient Card (Glassmorphism style) ───
+// ─── Glass Card ───
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
@@ -30,13 +32,12 @@ fun GlassCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
-        modifier = modifier
-            .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(cornerRadius),
-                ambientColor = Primary.copy(alpha = 0.1f),
-                spotColor = Primary.copy(alpha = 0.1f)
-            ),
+        modifier = modifier.shadow(
+            elevation = 8.dp,
+            shape = RoundedCornerShape(cornerRadius),
+            ambientColor = Primary.copy(alpha = 0.08f),
+            spotColor = Primary.copy(alpha = 0.08f)
+        ),
         shape = RoundedCornerShape(cornerRadius),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
@@ -46,20 +47,7 @@ fun GlassCard(
     }
 }
 
-// ─── Gradient Background Box ───
-@Composable
-fun GradientBox(
-    modifier: Modifier = Modifier,
-    gradient: Brush = GradientPrimary,
-    content: @Composable BoxScope.() -> Unit
-) {
-    Box(
-        modifier = modifier.background(gradient),
-        content = content
-    )
-}
-
-// ─── Stat Pill (compact stat chip) ───
+// ─── Stat Pill ───
 @Composable
 fun StatPill(
     label: String,
@@ -70,30 +58,26 @@ fun StatPill(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = color.copy(alpha = 0.1f)
-        )
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f))
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Text(icon, fontSize = 16.sp)
-            Column {
-                Text(
-                    value,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = color
-                )
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text(icon, fontSize = 14.sp)
+            Text(
+                value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = color
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -107,9 +91,7 @@ fun SectionHeader(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -131,7 +113,7 @@ fun SectionHeader(
     }
 }
 
-// ─── Emoji Icon Circle ───
+// ─── Emoji Circle ───
 @Composable
 fun EmojiCircle(
     emoji: String,
@@ -146,10 +128,7 @@ fun EmojiCircle(
             .background(backgroundColor),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            emoji,
-            fontSize = (size.value * 0.5).sp
-        )
+        Text(emoji, fontSize = (size.value * 0.5).sp)
     }
 }
 
@@ -163,13 +142,12 @@ fun GradientFAB(
 ) {
     FloatingActionButton(
         onClick = onClick,
-        modifier = modifier
-            .shadow(
-                elevation = 12.dp,
-                shape = CircleShape,
-                ambientColor = Primary.copy(alpha = 0.3f),
-                spotColor = Primary.copy(alpha = 0.3f)
-            ),
+        modifier = modifier.shadow(
+            elevation = 12.dp,
+            shape = CircleShape,
+            ambientColor = Primary.copy(alpha = 0.3f),
+            spotColor = Primary.copy(alpha = 0.3f)
+        ),
         shape = CircleShape,
         containerColor = Color.Transparent,
         contentColor = Color.White,
@@ -186,7 +164,7 @@ fun GradientFAB(
     }
 }
 
-// ─── Empty State ───
+// ─── Rich Empty State ───
 @Composable
 fun EmptyState(
     emoji: String,
@@ -197,37 +175,66 @@ fun EmptyState(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(48.dp),
+            .padding(40.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Pulsing emoji animation
-        val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+        // Animated floating emoji
+        val infiniteTransition = rememberInfiniteTransition(label = "float")
+        val offsetY by infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = -12f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1500, easing = EaseInOut),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "offsetY"
+        )
         val scale by infiniteTransition.animateFloat(
             initialValue = 1f,
-            targetValue = 1.15f,
+            targetValue = 1.1f,
             animationSpec = infiniteRepeatable(
-                animation = tween(1000, easing = EaseInOut),
+                animation = tween(1500, easing = EaseInOut),
                 repeatMode = RepeatMode.Reverse
             ),
             label = "scale"
         )
 
-        Text(
-            emoji,
-            fontSize = (64 * scale).sp
-        )
-        Spacer(modifier = Modifier.height(20.dp))
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .offset(y = offsetY.dp)
+                .shadow(16.dp, CircleShape)
+                .background(
+                    Brush.radialGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        )
+                    ),
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                emoji,
+                fontSize = (48 * scale).sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
         Text(
             title,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             subtitle,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -238,7 +245,6 @@ fun GradientProgressRing(
     progress: Float,
     size: Dp = 100.dp,
     strokeWidth: Dp = 10.dp,
-    gradient: Brush = GradientPrimary,
     content: @Composable () -> Unit
 ) {
     Box(
