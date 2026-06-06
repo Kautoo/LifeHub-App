@@ -13,9 +13,14 @@ import com.fizi.lifehub.data.local.entity.*
         NoteEntity::class,
         BudgetEntity::class,
         HabitEntity::class,
-        HabitLogEntity::class
+        HabitLogEntity::class,
+        PomodoroSessionEntity::class,
+        JournalEntryEntity::class,
+        EventEntity::class,
+        GoalEntity::class,
+        WaterLogEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -25,4 +30,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun budgetDao(): BudgetDao
     abstract fun habitDao(): HabitDao
     abstract fun habitLogDao(): HabitLogDao
+    abstract fun pomodoroDao(): PomodoroDao
+    abstract fun journalDao(): JournalDao
+    abstract fun eventDao(): EventDao
+    abstract fun goalDao(): GoalDao
+    abstract fun waterDao(): WaterDao
 }

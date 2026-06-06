@@ -261,3 +261,28 @@ fun GradientProgressRing(
         content()
     }
 }
+
+// ─── Decorative Background ───
+@Composable
+fun DecorativeBackground() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .size(200.dp)
+                .offset(x = 250.dp, y = (-50).dp)
+                .background(Primary.copy(alpha = 0.04f), CircleShape)
+        )
+        Box(
+            modifier = Modifier
+                .size(300.dp)
+                .offset(x = (-100).dp, y = 600.dp)
+                .background(Secondary.copy(alpha = 0.03f), CircleShape)
+        )
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .offset(x = 320.dp, y = 400.dp)
+                .background(Tertiary.copy(alpha = 0.04f), CircleShape)
+        )
+    }
+}

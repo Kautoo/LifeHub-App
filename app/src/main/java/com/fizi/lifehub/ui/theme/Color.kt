@@ -69,6 +69,7 @@ val IncomeColor = Green500
 val ExpenseColor = Red500
 val HabitGreen = Green500
 val HabitStreak = Amber500
+val WaterBlue = Color(0xFF29B6F6)
 
 // ─── Gradient Brushes ───
 val GradientPrimary = Brush.linearGradient(listOf(Teal500, Teal700))
