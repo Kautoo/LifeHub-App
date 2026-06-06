@@ -1,9 +1,11 @@
 package com.fizi.lifehub.ui.budget
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,162 +25,118 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fizi.lifehub.data.local.entity.BudgetCategory
-import com.fizi.lifehub.data.local.entity.BudgetEntity
 import com.fizi.lifehub.data.local.entity.TransactionType
 import com.fizi.lifehub.ui.components.*
 import com.fizi.lifehub.ui.theme.*
-import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
+
+private val categoryIcons = mapOf(
+    BudgetCategory.FOOD to "🍔", BudgetCategory.TRANSPORT to "🚗",
+    BudgetCategory.ENTERTAINMENT to "🎮", BudgetCategory.EDUCATION to "📚",
+    BudgetCategory.SHOPPING to "🛍️", BudgetCategory.BILLS to "📄",
+    BudgetCategory.SAVINGS to "🏦", BudgetCategory.SALARY to "💰",
+    BudgetCategory.OTHER to "📦"
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BudgetScreen(viewModel: BudgetViewModel = hiltViewModel()) {
     val transactions by viewModel.transactions.collectAsState()
+    val balance by viewModel.balance.collectAsState()
     val totalIncome by viewModel.totalIncome.collectAsState()
     val totalExpense by viewModel.totalExpense.collectAsState()
-    val balance by viewModel.balance.collectAsState()
-    var showAddDialog by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
     var newTitle by remember { mutableStateOf("") }
     var newAmount by remember { mutableStateOf("") }
-    var newType by remember { mutableStateOf(TransactionType.EXPENSE) }
+    var newType by remember { mutableStateOf(TransactionType.INCOME) }
     var newCategory by remember { mutableStateOf(BudgetCategory.OTHER) }
-    var newNote by remember { mutableStateOf("") }
-    val df = remember { DecimalFormat("#,##0.00") }
+
+    val dateFormat = remember { SimpleDateFormat("MMM dd", Locale.getDefault()) }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        DecorativeBackground()
+
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(Tertiary.copy(alpha = 0.06f), Color.Transparent)
-                            )
-                        )
-                        .statusBarsPadding()
-                        .padding(horizontal = 20.dp, vertical = 12.dp)
-                ) {
-                    Text(
-                        "Budget",
-                        style = MaterialTheme.typography.displayLarge,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                    if (transactions.isNotEmpty()) {
-                        Text(
-                            "${transactions.size} transactions",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                FadeInOnAppear(delayMs = 0) {
+                    Box(modifier = Modifier.fillMaxWidth()
+                        .background(Brush.verticalGradient(listOf(Color(0xFF00897B).copy(alpha = 0.08f), Color.Transparent)))
+                        .statusBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp)
+                    ) { Text("💰 Budget", style = MaterialTheme.typography.displayLarge, fontWeight = FontWeight.ExtraBold) }
                 }
             },
             floatingActionButton = {
-                GradientFAB(
-                    onClick = { showAddDialog = true },
-                    icon = Icons.Default.Add,
-                    gradient = GradientSunset
-                )
+                SlideInFromBottom(delayMs = 400) {
+                    GradientFAB(onClick = { showDialog = true }, icon = Icons.Default.Add, gradient = GradientForest)
+                }
             }
         ) { padding ->
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Balance Card
                 item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth().shadow(
-                            elevation = 12.dp,
-                            shape = RoundedCornerShape(24.dp),
-                            ambientColor = Primary.copy(alpha = 0.15f),
-                            spotColor = Primary.copy(alpha = 0.15f)
-                        ),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    Brush.linearGradient(
-                                        listOf(Primary, Teal700, Primary.copy(alpha = 0.8f))
-                                    )
-                                )
-                                .padding(28.dp)
+                    FadeInOnAppear(delayMs = 100) {
+                        GradientGlassCard(
+                            modifier = Modifier.fillMaxWidth().pressEffect(),
+                            gradient = Brush.linearGradient(listOf(Color(0xFF00897B), Color(0xFF00695C)))
                         ) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    "Total Balance",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.White.copy(alpha = 0.8f)
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    "RM ${df.format(balance)}",
-                                    style = MaterialTheme.typography.displayLarge,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White,
-                                    fontSize = 36.sp
-                                )
-                                Spacer(modifier = Modifier.height(20.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceEvenly
-                                ) {
+                            Column(modifier = Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Balance", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("RM ${"%.2f".format(balance)}", fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Card(
-                                            shape = RoundedCornerShape(14.dp),
-                                            colors = CardDefaults.cardColors(
-                                                containerColor = Color.White.copy(alpha = 0.2f)
-                                            )
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                            ) {
-                                                Text("↑", color = Color(0xFFB9F6CA), fontWeight = FontWeight.Bold)
-                                                Text(
-                                                    "RM ${df.format(totalIncome)}",
-                                                    style = MaterialTheme.typography.titleMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = Color.White
-                                                )
-                                            }
-                                        }
-                                        Text("Income", color = Color.White.copy(alpha = 0.7f),
-                                            style = MaterialTheme.typography.labelSmall)
+                                        BouncyEmoji("📈", size = 24)
+                                        Text("RM ${"%.0f".format(totalIncome)}", fontWeight = FontWeight.Bold, color = Color.White)
+                                        Text("Income", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f))
                                     }
+                                    Box(modifier = Modifier.width(1.dp).height(40.dp).background(Color.White.copy(alpha = 0.3f)))
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Card(
-                                            shape = RoundedCornerShape(14.dp),
-                                            colors = CardDefaults.cardColors(
-                                                containerColor = Color.White.copy(alpha = 0.2f)
-                                            )
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                            ) {
-                                                Text("↓", color = Color(0xFFFFCDD2), fontWeight = FontWeight.Bold)
-                                                Text(
-                                                    "RM ${df.format(totalExpense)}",
-                                                    style = MaterialTheme.typography.titleMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = Color.White
-                                                )
-                                            }
-                                        }
-                                        Text("Expense", color = Color.White.copy(alpha = 0.7f),
-                                            style = MaterialTheme.typography.labelSmall)
+                                        BouncyEmoji("📉", size = 24)
+                                        Text("RM ${"%.0f".format(totalExpense)}", fontWeight = FontWeight.Bold, color = Color.White)
+                                        Text("Expense", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (transactions.isNotEmpty()) {
+                    item { FadeInOnAppear(delayMs = 200) { SectionHeader(title = "Transactions", subtitle = "${transactions.size} records") } }
+                    items(transactions.take(20), key = { it.id }) { tx ->
+                        var visible by remember { mutableStateOf(false) }
+                        LaunchedEffect(Unit) { kotlinx.coroutines.delay(300); visible = true }
+                        AnimatedVisibility(visible = visible,
+                            enter = fadeIn(tween(400)) + slideInHorizontally(spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow), initialOffsetX = { it / 5 })
+                        ) {
+                            GlassCard(modifier = Modifier.fillMaxWidth().pressEffect()) {
+                                Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Box(modifier = Modifier.size(40.dp).clip(CircleShape)
+                                        .background(if (tx.type == TransactionType.INCOME) IncomeColor.copy(alpha = 0.15f) else ExpenseColor.copy(alpha = 0.15f)),
+                                        contentAlignment = Alignment.Center
+                                    ) { Text(categoryIcons[tx.category] ?: "📦", fontSize = 20.sp) }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(tx.title, fontWeight = FontWeight.SemiBold)
+                                        Text(tx.category.name.lowercase().replaceFirstChar { it.uppercase() },
+                                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text("${if (tx.type == TransactionType.INCOME) "+" else "-"}RM ${"%.2f".format(tx.amount)}",
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (tx.type == TransactionType.INCOME) IncomeColor else ExpenseColor)
+                                        Text(dateFormat.format(Date(tx.date)), style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    IconButton(onClick = { viewModel.delete(tx) }, modifier = Modifier.size(28.dp)) {
+                                        Icon(Icons.Default.Delete, "Delete", modifier = Modifier.size(16.dp),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
                             }
@@ -187,23 +145,7 @@ fun BudgetScreen(viewModel: BudgetViewModel = hiltViewModel()) {
                 }
 
                 if (transactions.isEmpty()) {
-                    item {
-                        EmptyState(
-                            emoji = "💰",
-                            title = "No transactions yet",
-                            subtitle = "Tap + to add your first transaction"
-                        )
-                    }
-                }
-
-                if (transactions.isNotEmpty()) {
-                    item {
-                        SectionHeader(title = "Transactions", subtitle = "${transactions.size} records")
-                    }
-                }
-
-                items(transactions, key = { it.id }) { transaction ->
-                    ModernTransactionItem(transaction, df) { viewModel.delete(transaction) }
+                    item { FadeInOnAppear(delayMs = 200) { EmptyState(emoji = "💰", title = "No transactions yet", subtitle = "Tap + to add income or expense") } }
                 }
 
                 item { Spacer(modifier = Modifier.height(100.dp)) }
@@ -211,132 +153,65 @@ fun BudgetScreen(viewModel: BudgetViewModel = hiltViewModel()) {
         }
     }
 
-    if (showAddDialog) {
+    if (showDialog) {
         AlertDialog(
-            onDismissRequest = {
-                showAddDialog = false; newTitle = ""; newAmount = ""
-                newType = TransactionType.EXPENSE; newCategory = BudgetCategory.OTHER; newNote = ""
+            onDismissRequest = { showDialog = false; newTitle = ""; newAmount = "" },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BouncyEmoji("💰", size = 28); Spacer(modifier = Modifier.width(8.dp))
+                    Text("New Transaction", fontWeight = FontWeight.Bold)
+                }
             },
-            title = { Text("💸 New Transaction", fontWeight = FontWeight.Bold) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(value = newTitle, onValueChange = { newTitle = it },
+                        label = { Text("Description") }, singleLine = true,
+                        modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp))
+                    OutlinedTextField(value = newAmount, onValueChange = { newAmount = it },
+                        label = { Text("Amount (RM)") }, singleLine = true,
+                        modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp))
+                    Text("Type", style = MaterialTheme.typography.labelLarge)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TransactionType.entries.forEach { type ->
-                            FilterChip(
-                                selected = newType == type,
-                                onClick = { newType = type },
-                                label = { Text(if (type == TransactionType.INCOME) "💚 Income" else "❤️ Expense") },
-                                shape = RoundedCornerShape(12.dp),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = if (type == TransactionType.INCOME)
-                                        IncomeColor.copy(alpha = 0.15f) else Error.copy(alpha = 0.15f)
-                                )
-                            )
+                            val isSelected = newType == type
+                            Box(modifier = Modifier.clip(RoundedCornerShape(12.dp))
+                                .background(if (isSelected) { if (type == TransactionType.INCOME) IncomeColor.copy(alpha = 0.15f) else ExpenseColor.copy(alpha = 0.15f) } else MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable { newType = type }
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                Text(if (type == TransactionType.INCOME) "📈 Income" else "📉 Expense",
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) { if (type == TransactionType.INCOME) IncomeColor else ExpenseColor } else MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                         }
                     }
-                    OutlinedTextField(
-                        value = newTitle, onValueChange = { newTitle = it },
-                        label = { Text("Title") }, singleLine = true,
-                        modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)
-                    )
-                    OutlinedTextField(
-                        value = newAmount,
-                        onValueChange = { if (it.matches(Regex("^\\d*\\.?\\d*$"))) newAmount = it },
-                        label = { Text("Amount (RM)") }, singleLine = true,
-                        modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)
-                    )
                     Text("Category", style = MaterialTheme.typography.labelLarge)
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(BudgetCategory.entries) { cat ->
-                            FilterChip(
-                                selected = newCategory == cat,
-                                onClick = { newCategory = cat },
-                                label = { Text(cat.name.lowercase().replaceFirstChar { it.uppercase() },
-                                    style = MaterialTheme.typography.labelSmall) },
-                                shape = RoundedCornerShape(10.dp)
-                            )
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                        BudgetCategory.entries.take(5).forEach { cat ->
+                            val isSelected = newCategory == cat
+                            Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) Primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable { newCategory = cat }
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                            ) { Text(categoryIcons[cat] ?: "📦", fontSize = 16.sp) }
                         }
                     }
-                    OutlinedTextField(
-                        value = newNote, onValueChange = { newNote = it },
-                        label = { Text("Note (optional)") }, maxLines = 2,
-                        modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)
-                    )
                 }
             },
             confirmButton = {
-                Button(
+                BouncyButton(
                     onClick = {
                         val amount = newAmount.toDoubleOrNull()
                         if (newTitle.isNotBlank() && amount != null && amount > 0) {
-                            viewModel.addTransaction(newTitle.trim(), amount, newType, newCategory, newNote.trim())
-                            showAddDialog = false; newTitle = ""; newAmount = ""
-                            newType = TransactionType.EXPENSE; newCategory = BudgetCategory.OTHER; newNote = ""
+                            viewModel.addTransaction(newTitle.trim(), amount, newType, newCategory)
+                            showDialog = false; newTitle = ""; newAmount = ""
                         }
                     },
                     enabled = newTitle.isNotBlank() && newAmount.toDoubleOrNull() != null,
-                    shape = RoundedCornerShape(14.dp)
-                ) { Text("Add") }
+                    gradient = GradientForest
+                ) { Text("Add", color = Color.White, fontWeight = FontWeight.Bold) }
             },
-            dismissButton = {
-                TextButton(onClick = {
-                    showAddDialog = false; newTitle = ""; newAmount = ""
-                    newType = TransactionType.EXPENSE; newCategory = BudgetCategory.OTHER; newNote = ""
-                }) { Text("Cancel") }
-            }
+            dismissButton = { TextButton(onClick = { showDialog = false; newTitle = ""; newAmount = "" }) { Text("Cancel") } }
         )
-    }
-}
-
-@Composable
-fun ModernTransactionItem(transaction: BudgetEntity, df: DecimalFormat, onDelete: () -> Unit) {
-    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-    val isIncome = transaction.type == TransactionType.INCOME
-    val categoryEmoji = when (transaction.category) {
-        BudgetCategory.FOOD -> "🍔"; BudgetCategory.TRANSPORT -> "🚗"
-        BudgetCategory.ENTERTAINMENT -> "🎮"; BudgetCategory.EDUCATION -> "📚"
-        BudgetCategory.SHOPPING -> "🛍️"; BudgetCategory.BILLS -> "📱"
-        BudgetCategory.SAVINGS -> "🏦"; BudgetCategory.SALARY -> "💵"
-        BudgetCategory.OTHER -> "📋"
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth().shadow(
-            elevation = 3.dp, shape = RoundedCornerShape(16.dp),
-            ambientColor = Color.Black.copy(alpha = 0.05f),
-            spotColor = Color.Black.copy(alpha = 0.05f)
-        ),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier.size(44.dp).clip(CircleShape)
-                    .background(if (isIncome) IncomeColor.copy(alpha = 0.1f) else Error.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
-            ) { Text(categoryEmoji, fontSize = 20.sp) }
-            Spacer(modifier = Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(transaction.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-                Text(
-                    "${transaction.category.name.lowercase().replaceFirstChar { it.uppercase() }} • ${dateFormat.format(Date(transaction.date))}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Text(
-                "${if (isIncome) "+" else "-"}RM ${df.format(transaction.amount)}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (isIncome) IncomeColor else Error
-            )
-            IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                Icon(Icons.Default.Delete, "Delete", tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp))
-            }
-        }
     }
 }
